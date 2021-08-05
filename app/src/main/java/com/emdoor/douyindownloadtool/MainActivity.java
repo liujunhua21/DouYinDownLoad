@@ -109,6 +109,10 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                Intent intent = new Intent();
+                                intent.setData(Uri.parse(httplink));
+                                intent.setAction(Intent.ACTION_VIEW);
+                                startActivity(intent);
                                 Toast.makeText(MainActivity.this, "下载完成", Toast.LENGTH_SHORT).show();
                             }
                         });
