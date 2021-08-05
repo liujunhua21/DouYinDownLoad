@@ -10,6 +10,16 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:id="@+id/progress_bar"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:max="100"
+            android:progress="0" />
+
         <EditText
             android:id="@+id/HttpsAdress"
             android:layout_width="match_parent"
@@ -37,6 +47,13 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:text="下一页" />
+
+            <Button
+                android:id="@+id/playvideo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:text="播放" />
         </RelativeLayout>
 
         <ListView
@@ -45,5 +62,11 @@
             android:layout_height="wrap_content"
             android:autoLink="web" />
     </LinearLayout>
+
+    <VideoView
+        android:id="@+id/video_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
 
 </FrameLayout>

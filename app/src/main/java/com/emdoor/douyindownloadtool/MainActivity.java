@@ -1,10 +1,18 @@
 package com.emdoor.douyindownloadtool;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -15,11 +23,21 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.MediaController;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,12 +64,16 @@ public class MainActivity extends AppCompatActivity {
     private String dataAdress;
     private Boolean hasMore;
     private Long maxCursor;
+    private VideoView videoView;
+    private ProgressBar progressBar;
     private ArrayList<String> data = new ArrayList<String>();
     private ListView listView = null;
     private ArrayAdapter<String> adapter = null;
     private static final int MSG_REFRESH_UI = 130;
     private static final int MSG_REFRESH_ENABLED = 131;
     private static final int MSG_REFRESH_DISENABLED = 132;
+    private String dirName = "/DownloadAdress/";
+    //private File file = new File(dirName);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,10 +84,13 @@ public class MainActivity extends AppCompatActivity {
         search_button = findViewById(R.id.search_button);
         next_button = findViewById(R.id.next_button);
         listView = findViewById(R.id.listview);
+        videoView = findViewById(R.id.video_view);
+        progressBar = findViewById(R.id.progress_bar);
         adapter = new ArrayAdapter<String>(MainActivity.this, R.layout.down_list, data);
         listView.setAdapter(adapter);
         next_button.setEnabled(false);
         HttpsAdress.setText("https://v.douyin.com/ecDrYfC/");
+
 
         listView.setOnItemClickListener(new ListView.OnItemClickListener(){
 
@@ -73,10 +98,43 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 TextView textView = view.findViewById(R.id.text);
                 String httplink = textView.getText().toString();
-                Intent intent = new Intent();
-                intent.setData(Uri.parse(httplink));
-                intent.setAction(Intent.ACTION_VIEW);
-                startActivity(intent);
+//                Intent intent = new Intent();
+//                intent.setData(Uri.parse(httplink));
+//                intent.setAction(Intent.ACTION_VIEW);
+//                startActivity(intent);
+
+                DownloadUtil.get().download(httplink, dirName, new DownloadUtil.OnDownloadListener() {
+                    @Override
+                    public void onDownloadSuccess() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "下载完成", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onDownloading(final int progress) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressBar.setProgress(progress);
+                                Log.d(TAG, "progress" + progress);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onDownloadFailed() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "下载失败", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
             }
         });
 
@@ -174,6 +232,29 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }.start();
+    }
+
+    // 播放视频
+    private void startVideo(String videoURI) {
+        videoView.setVisibility(View.VISIBLE);
+        //videoView.setLayoutParams(new RelativeLayout.LayoutParams(UtilsTools.getCurScreenWidth(mContext), UtilsTools.getCurScreenWidth(mContext) / 3 * 4)); // 此行代码是设置视频的宽高比是3/4,不需要就注释掉即可
+        // 设置播放加载路径
+        //        videoview.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.aaa));
+        videoView.setVideoURI(Uri.parse(videoURI));
+        // 播放
+        videoView.start();
+        MediaController mediaController = new MediaController(this);
+        videoView.setMediaController(mediaController);
+        mediaController.setMediaPlayer(videoView);
+        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener()
+        {
+            @Override
+            public void onCompletion(MediaPlayer mp)
+            {
+                videoView.setVisibility(View.GONE);
+            }
+
+        });
     }
 
     private boolean isHttpUrl(String urls) {
